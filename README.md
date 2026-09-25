@@ -163,10 +163,10 @@ road_distance ≈ d × 1.5
 
 ## 👤 Author
 
-**Saksham Kumar**
-- GitHub: [@Saksham7-sys](https://github.com/Saksham7-sys)
-- LinkedIn: [Saksham Kumar](https://www.linkedin.com/in/saksham-kumar-thakur/)
-- Codeforces: [Saksham_thakur82](https://codeforces.com/profile/Saksham_thakur82)
+**Kuldeep Singhr**
+- GitHub: [@Saksham7-sys](https://github.com/kuldeepbtu/)
+- LinkedIn: [Saksham Kumar](www.linkedin.com/in/kuldeep-singh-code)
+
 
 ---
 
