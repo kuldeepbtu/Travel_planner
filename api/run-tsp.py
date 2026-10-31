@@ -14,7 +14,7 @@ def solve_tsp(selected):
     # State key is (visited_mask, last_index); value is (cost, path).
     dp = {}
     for j in range(1, n):
-        dp[(1 << j, j)] = (road_dist(selected[0], selected[j]), [0, j])
+        dp[(1 | (1 << j), j)] = (road_dist(selected[0], selected[j]), [0, j])
 
     for mask in range(1 << n):
         if mask & 1:
