@@ -338,8 +338,8 @@ let activeFilter='all';
 /* ── Init map ──────────────────────────────────────────────────────────────── */
 function initMap(){
   map = L.map('map',{
-    center:[25.35, 91.5],
-    zoom:9,
+    center:[22.5, 79.0],
+    zoom:5,
     zoomControl:true,
     attributionControl:true,
   });
@@ -402,8 +402,12 @@ async function loadSpots(){
     const r = await fetch('/api/spots');
     allSpots = await r.json();
     if(allSpots.error){ showError(allSpots.error); return; }
+    const stateSelect=document.getElementById('stateFilter');
+    const states=[...new Set(allSpots.map(s=>s.state).filter(Boolean))].sort();
+    stateSelect.innerHTML='<option value="all">All States &amp; Union Territories</option>'+states.map(s=>`<option value="${s}">${s}</option>`).join('');
     renderCards();
     placeSpotMarkers();
+    if(allSpots.length) map.fitBounds(L.latLngBounds(allSpots.map(s=>[s.lat,s.lng])),{padding:[25,25],maxZoom:5});
     const pill=document.getElementById('statusPill');
     pill.textContent=`${allSpots.length} spots ready`;
     pill.classList.add('ready');
