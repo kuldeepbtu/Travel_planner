@@ -312,7 +312,7 @@ header::after{
 <div class="overlay" id="overlay">
   <div class="spinner"></div>
   <div class="ov-title">Computing optimal route…</div>
-  <div class="ov-sub">Branch &amp; Bound TSP · haversine distances</div>
+  <div class="ov-sub">Held–Karp exact TSP · estimated road distances</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -344,10 +344,10 @@ function initMap(){
     attributionControl:true,
   });
 
-  // CartoDB dark matter — free, no API key
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" style="color:#6a917a">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" style="color:#6a917a">CARTO</a>',
-    subdomains:'abcd', maxZoom:19,
+  // OpenStreetMap standard tiles — no API key required.
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" style="color:#526b5a">OpenStreetMap contributors</a>',
+    subdomains:'abc', maxZoom:19,
   }).addTo(map);
 }
 
@@ -468,22 +468,32 @@ async function runTSP(){
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({spots}),
     });
-    const data=await res.json();
-    if(!res.ok||data.error){ showError(data.error||'TSP failed'); return; }
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned an invalid response (HTTP ${res.status}).`); }
+    if(!res.ok || data.error){
+      showError(data.error || `Route calculation failed (HTTP ${res.status}).`);
+      return;
+    }
+    if(!Array.isArray(data.route) || data.route.length < 3 || !Number.isFinite(Number(data.total_km))){
+      showError('The route service returned incomplete route data. Please try again.');
+      return;
+    }
     displayRoute(data);
-  }catch(e){ showError('Network error: '+e.message); }
+  }catch(e){ showError('Unable to calculate route: '+e.message); }
   finally{ document.getElementById('overlay').classList.remove('active'); }
 }
 
 /* ── Display route ──────────────────────────────────────────────────────────── */
 function displayRoute({route,total_km}){
   document.getElementById('routeKm').textContent=`${total_km} km`;
-  document.getElementById('routeMeta').textContent=`${route.length} stops · branch & bound optimal`;
+  document.getElementById('routeMeta').textContent=`${route.length} stops · exact Held–Karp route`;
 
   document.getElementById('routeSteps').innerHTML = route.map((step,idx)=>{
     const isFirst=idx===0, isRet=idx===route.length-1;
-    const prev_km=idx>0?(parseInt(route[idx-1].cumulative_km)||0):0;
-    const this_km=parseInt(step.cumulative_km)||0;
+    const prev_km=idx>0?(parseFloat(route[idx-1].cumulative_km)||0):0;
+    const this_km=parseFloat(step.cumulative_km)||0;
     const leg=idx>0?this_km-prev_km:0;
     const bc=isRet?'ret':isFirst?'origin':'';
     const bl=isRet?'↩':isFirst?'⦿':step.step;
